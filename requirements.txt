@@ -1,0 +1,11 @@
+discord.py
+pyautogui
+requests
+pycryptodome
+keyboard
+pyperclip
+opencv-python
+python-minifier
+nuitka
+pyarmor
+pyinstaller
