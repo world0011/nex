@@ -55,7 +55,7 @@ pip install -r requirements.txt
 python setup.py
 ```
 
-⚠️ For most users, it is recommended to download the files directly from the [Releases page](https://github.com/world1100/Nex/releases).  
+⚠️ For most users, it is recommended to download the files directly from the [Releases page](https://github.com/world0011/Nex/releases).  
 
 ---
 
