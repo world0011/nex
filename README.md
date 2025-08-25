@@ -1,4 +1,4 @@
-<img width="1000" height="712" alt="NexLogo_resized" src="https://github.com/user-attachments/assets/253d4d2e-9071-4743-9bb7-5f0faa80dd21" />
+<img width="1000" height="712" alt="NexLogo_resized" src="https://github.com/user-attachments/assets/cfb4497d-41fc-40fa-8819-d9126ea79124" />
 
 <h1 align="center">Nex</h1>
 
