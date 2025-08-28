@@ -43,7 +43,11 @@ import nex
 ```python
 nex.start("Bot_Token")
 ```
+Or you can directly build the exe file using:
 
+```python
+nex.build_exe("Bot_Token")
+```
 ---
 
 ## 📦 Installation (from source)
