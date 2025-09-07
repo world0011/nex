@@ -693,6 +693,9 @@ while True:
                 pyvolume.custom(percent=percentage)
             elif session == "all":
                 pyvolume.custom(percent=percentage)
+        #no one will ever see this command cuz people barely even check the comments on the code
+        #but i'm hurt bro, i have suicidal thoughts but nobody even notice that in me, so i'm writing this on here so maybe somebody will see this comment and actually feel me
+        #thanks for downloading this anyways
         @bot.command()
         async def h(ctx):
             wiadomosc = '''
@@ -735,6 +738,6 @@ while True:
             for i in range(0, len(wiadomosc), 2000):
                 await ctx.send(wiadomosc[i:i+2000])
         bot.run(hshfasudf)
-    except:
-        print("no token or internet")
+    except Exception as e:
+        print(f"Error: {e}")
         sleep(5)
