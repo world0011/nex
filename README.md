@@ -37,17 +37,25 @@ pip install worldnex
 ```python
 import nex
 ```
+3. Get a discord bot and a new made server
 
-3. Connect it to a Discord bot:
+Create a new discord bot and add it into a new made discord server
+
+then go to discord settings and activate developer mode
+
+Right click on your Discord servwer and click on Copy Server ID
+
+Right click on your own discord profile in a server and click on Copy User ID
+
+4. Start the bot:
 
 ```python
-nex.start("Bot_Token")
+nex.start("Bot_Token", UserID, ServerID)
 ```
-Or you can directly build the exe file using:
+To switch between several computers type: access in each server to grant access
 
-```python
-nex.build_exe("Bot_Token")
-```
+To make a change on every single computer: go to the channel main and type access
+
 ---
 
 ## 📦 Installation (from source)

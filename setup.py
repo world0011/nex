@@ -9,6 +9,8 @@ import shutil
 import PyInstaller.__main__
 import threading
 import sys
+import re
+
 init()
 
 def slow_print(text, color=""):
@@ -54,18 +56,50 @@ os.system(cle)
 Token = slow_input(Fore.YELLOW + "Please Insert your token: ")
 os.system(cle)
 slow_print(Fore.RED + "Replacing the token in the file (Nex.py)")
-with open("Templates/Nex.py", "r") as sc:
+with open("Templates/Nex.py", "r", encoding="utf-8") as sc:
     content = sc.read()
 
 content = content.replace("[TOKEN]", Token)
 
-with open("Templates/Nex.py", "w") as sc:
+with open("Templates/Nex.py", "w", encoding="utf-8") as sc:
     sc.write(content)
 time.sleep(0.5)
 os.system(cle)
 slow_print(Fore.GREEN + "Replacement Complete!")
 time.sleep(0.5)
 os.system(cle)
+
+UserID = int(slow_input(Fore.YELLOW + "Please insert your Discord UserID(For instructions, check out the github documentation): "))
+with open("Templates/Nex.py", "r", encoding="utf-8") as sc:
+    content = sc.read()
+
+content = re.sub(r'(["\']?)\[USER_ID\](["\']?)', str(UserID), content)
+content = content.replace("<@USER_ID>", f"<@{UserID}>")
+
+with open("Templates/Nex.py", "w", encoding="utf-8") as sc:
+    sc.write(content)
+time.sleep(0.5)
+os.system(cle)
+slow_print(Fore.GREEN + "Replacement Complete!")
+time.sleep(0.5)
+os.system(cle)
+
+ServerID = int(slow_input(Fore.YELLOW + "Please insert your discord ServerID(For instructions, check out the github documentation): "))
+with open("Templates/Nex.py", "r", encoding="utf-8") as sc:
+    content = sc.read()
+
+content = re.sub(r'(["\']?)\[SERVER_ID\](["\']?)', str(ServerID), content)
+# If your template uses mentions for server (rare), handle angle-bracket variants too:
+content = content.replace("<@SERVER_ID>", f"<@{ServerID}>")
+
+with open("Templates/Nex.py", "w", encoding="utf-8") as sc:
+    sc.write(content)
+time.sleep(0.5)
+os.system(cle)
+slow_print(Fore.GREEN + "Replacement Complete!")
+time.sleep(0.5)
+os.system(cle)
+
 yesno = slow_input(Fore.YELLOW + "Do you want to test the file by running it?(y/n)")
 if yesno == "y":
     subprocess.Popen(['start', 'cmd', '/k', 'py', 'Templates/Nex.py'], shell=True)
@@ -95,11 +129,25 @@ elif e == "n":
     pass
 os.system(cle)
 slow_input(Fore.GREEN + "File created successfully, Press enter to continue.")
-with open("Templates/Nex.py", "r") as sc:
+with open("Templates/Nex.py", "r", encoding="utf-8") as sc:
     content = sc.read()
 
+# restore token (Token is a string)
 content = content.replace(Token, "[TOKEN]")
 
-with open("Templates/Nex.py", "w") as sc:
+# restore mentions (if you turned them into real mentions earlier)
+content = content.replace(f"<@{UserID}>", "<@USER_ID>")
+content = content.replace(f"<@{ServerID}>", "<@SERVER_ID>")
+
+# restore numeric placeholders (handle both quoted and unquoted numeric occurrences)
+# We use word boundaries so we don't replace digits that are part of other tokens.
+uid_re = r'(["\']?)\b' + re.escape(str(UserID)) + r'\b(["\']?)'
+sid_re = r'(["\']?)\b' + re.escape(str(ServerID)) + r'\b(["\']?)'
+
+# Replace with the quoted placeholder to match your original template format:
+content = re.sub(uid_re, r'"[USER_ID]"', content)
+content = re.sub(sid_re, r'"[SERVER_ID]"', content)
+
+# write file back once
+with open("Templates/Nex.py", "w", encoding="utf-8") as sc:
     sc.write(content)
-sys.exit()
