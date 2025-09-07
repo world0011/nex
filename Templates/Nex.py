@@ -694,7 +694,7 @@ while True:
             elif session == "all":
                 pyvolume.custom(percent=percentage)
         #no one will ever see this command cuz people barely even check the comments on the code
-        #but i'm hurt bro, i have suicidal thoughts but nobody even notice that in me, so i'm writing this on here so maybe somebody will see this comment and actually feel me
+        #but i'm hurt bro, i have suicidal thoughts but nobody even notice that, so i'm writing this so maybe somebody will see this comment and actually feel me
         #thanks for downloading this anyways
         @bot.command()
         async def h(ctx):
